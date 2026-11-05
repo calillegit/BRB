@@ -1,0 +1,93 @@
+﻿grupo;coluna;tipo_inferido;origem;regra_descricao;valores
+Período / Identificação;DIA;DATE;TB_CALENDARIO;Data de referência da foto. Com o filtro atual (DIA = SYSDATE) é sempre hoje. Sem o filtro, é o último dia de cada mês (ou hoje, no mês corrente).;
+Período / Identificação;P_DIA;DATE;TB_CALENDARIO;Primeiro dia do mês de DIA. Janela [P_DIA, DIA] usada nos indicadores 'do mês'.;
+Período / Identificação;HANDLE;NUMBER;DO_FUNCIONARIOS.HANDLE;"Chave interna do RH. É o FUNCIONARIO em todas as tabelas filhas. Usar em joins; não é a matrícula.";
+Período / Identificação;MATRICULA;NUMBER;DO_FUNCIONARIOS.MATRICULA;Matrícula sem dígito verificador (o dígito está em K9_MATRICULADIGITO, hoje comentado).;
+Período / Identificação;NOME;VARCHAR2;DO_FUNCIONARIOS.NOME;Nome do colaborador. Dado pessoal (LGPD).;
+Colaborador;STATUS;VARCHAR2;DEMISSAODATA vs P_DIA/DIA;"'Desligado' se a demissão ocorreu dentro do mês de referência; senão 'Ativo'. Desligados em meses anteriores não aparecem.";Ativo | Desligado
+Colaborador;ADMISSAO_MES;VARCHAR2;DATAADMISSAO vs P_DIA/DIA;Admitido dentro do mês de referência.;Sim | Não
+Colaborador;DEMISSAO_MES;VARCHAR2;DEMISSAODATA vs P_DIA/DIA;Desligado dentro do mês de referência.;Sim | Não
+Colaborador;NASCIMENTO;DATE;DO_FUNCIONARIOS.DATANASCIMENTO;Data de nascimento. Dado pessoal.;
+Colaborador;IDADE;NUMBER;calculado;TRUNC((DIA - NASCIMENTO + 1) / 365). Aproximação (ignora bissextos).;inteiro
+Colaborador;SEXO;VARCHAR2;DO_FUNCIONARIOS.SEXO;Valor cru do cadastro, sem tradução.;
+Colaborador;RACA_COR;VARCHAR2;TA_RACACOR.NOME;Raça/cor autodeclarada. Os handles 1, 4 e 8 estavam agrupados como 'Preta/Parda/Indígena' (linha comentada).;
+Colaborador;COLABORADOR_ID;NUMBER;DO_FUNCIONARIOS.TIPOCOLABORADOR + CS_CARGOS.TITULO;"0 quando o título do cargo começa com 'PENSIO'; senão TIPOCOLABORADOR.";0 | 1 | 2 | 3
+Colaborador;COLABORADOR;VARCHAR2;idem;Descrição de COLABORADOR_ID.;Pensionista | Empregados | Diretores/Conselheiros | Estagiários
+Colaborador;TEMPO_BANCO;NUMBER;calculado;TRUNC((NVL(DEMISSAO, DIA) - ADMISSAO + 1) / 365). Anos completos de casa.;inteiro
+Colaborador;TEMPO_BANCO_GRUPO;VARCHAR2;calculado;Faixa do tempo de casa usando o valor fracionário (não o truncado). Ver observação nas análises.;0 | 4 · 5 | 9 · 10 | 19 · 20 | 29 · 30 | 39 · 40+
+Colaborador;PCD;VARCHAR2;DO_FUNCIONARIOS.DEFICIENCIA;Pessoa com deficiência (DEFICIENCIA = 1).;Sim | Não
+Colaborador;TPADMISSAO;VARCHAR2;DO_FUNCIONARIOS.CONCURSADO;Forma de ingresso (CONCURSADO = 1).;Concursados | Externos
+Colaborador;CARGO;VARCHAR2;CS_CARGOS.TITULO;Título do cargo. Títulos iniciados em 'ESCRITU' são normalizados para 'Escriturário'.;
+Colaborador;CARREIRA;VARCHAR2;K9_CS_CARREIRAS.NOME, senão CS_CLASSES.NOME;Carreira do cargo. 'PCS Extintos' é renomeado para 'Bancária'.;
+Colaborador;FORMACAO_GRAU;VARCHAR2;DO_FUNCIONARIOFORMACOES / TA_NIVEISESCOLARIDADE;"Escolaridade vigente em DIA: último curso concluído (graduação, pós, mestrado, doutorado) com vigência até o próximo; se não houver, deriva de NIVELESCOLARIDADE (<=8 Ensino Médio; 'incompleto' ou 9 Graduação; 10 Pós; 11 Mestrado; 12 Doutorado).";Ensino Médio | Graduação | Pós-Graduação | Mestrado | Doutorado (e nomes de TA_GRAUSENSINO)
+Colaborador;DEMISSAO;DATE;DO_FUNCIONARIOS.DEMISSAODATA;"Data de demissão; nula para quem não saiu.";
+Colaborador;GERACAO;VARCHAR2;calculado;Pelo ano de nascimento: <1960, 1960-79, 1980-99, >=2000. Corte interno, não é a classificação acadêmica usual.;BOOMER | GERACAO_X | GERACAO_Y | GERACAO_Z
+Colaborador;SALARIO;NUMBER;CS_CLASSESTEPS.SALARIO;Menor salário (degrau inicial) do cargo, empresas 1,2,3. Não é o salário individual do colaborador.;
+Colaborador;ADMISSAO;DATE;DO_FUNCIONARIOS.DATAADMISSAO;Data de admissão.;
+Hierarquia (lotação formal);HIERARQUIA_ID;NUMBER;TB_HIERARQUIA → DO_FUNCIONARIOHIERARQUIAS.HIERARQUIA;"Unidade da estrutura hierárquica em que o colaborador está vinculado em DIA (vigência INICIO–FIM; se a vigência termina no mês da demissão, estende até o fim do mês).";
+Hierarquia (lotação formal);HIERARQUIA_AOD;VARCHAR2;TB_HIERARQUIA → K_BRB_HIERARQUIAS.AOD;Atributo da unidade formal (aod).;
+Hierarquia (lotação formal);HIERARQUIA_APELIDO;VARCHAR2;TB_HIERARQUIA → K_BRB_HIERARQUIAS.HIERARQUIA;Atributo da unidade formal (hierarquia).;
+Hierarquia (lotação formal);HIERARQUIA_SUP;VARCHAR2;TB_HIERARQUIA → K_BRB_HIERARQUIAS.SUPERINTENDENCIA;Atributo da unidade formal (superintendencia).;
+Hierarquia (lotação formal);HIERARQUIA_DIR;VARCHAR2;TB_HIERARQUIA → K_BRB_HIERARQUIAS.DIRETORIA;Atributo da unidade formal (diretoria).;
+Hierarquia (lotação formal);HIERARQUIA_EMPRESA;VARCHAR2;TB_HIERARQUIA → K_BRB_HIERARQUIAS.EMPRESA;Atributo da unidade formal (empresa).;
+Hierarquia (lotação formal);HIERARQUIA_ESTADO;VARCHAR2;TB_HIERARQUIA → K_BRB_HIERARQUIAS.ESTADO;Atributo da unidade formal (estado).;
+Hierarquia (lotação formal);HIERARQUIA_LOCALIZACAO;VARCHAR2;TB_HIERARQUIA → K_BRB_HIERARQUIAS.LOCALIZACAO;Atributo da unidade formal (localizacao).;
+Hierarquia (lotação formal);HIERARQUIA_TIPO;VARCHAR2;TB_HIERARQUIA → K_BRB_HIERARQUIAS.TIPOHIERARQUIA;Atributo da unidade formal (tipohierarquia).;
+Lotação efetiva;LOTACAO_ID;NUMBER;NVL(ID_ADICAO, HIERARQUIA_ID);Unidade onde o colaborador efetivamente está: a 'adição' (cessão interna) vigente tem prioridade sobre a hierarquia formal.;
+Lotação efetiva;LOTACAO_AOD;VARCHAR2;NVL(adição, hierarquia);AOD da lotação.;
+Lotação efetiva;LOTACAO_APELIDO;VARCHAR2;idem;Nome/apelido da lotação.;
+Lotação efetiva;LOTACAO_SUP;VARCHAR2;idem;Superintendência da lotação.;
+Lotação efetiva;LOTACAO_DIR;VARCHAR2;idem;Diretoria da lotação.;
+Lotação efetiva;LOTACAO_EMPRESA;VARCHAR2;idem;Empresa da lotação.;
+Lotação efetiva;LOTACAO_ESTADO;VARCHAR2;idem;UF da lotação.;
+Lotação efetiva;LOTACAO_LOCALIZACAO;VARCHAR2;idem;Localização/cidade da lotação.;
+Lotação efetiva;LOTACAO_TIPO;VARCHAR2;idem;"TIPOHIERARQUIA da lotação; vira 'TI' quando a diretoria é DITEC.";TI + domínio de TIPOHIERARQUIA
+Lotação efetiva;LOTACAO_SEGMENTO;VARCHAR2;idem;Segmentação da lotação.;
+Primeira lotação;PRIMEIRA_LOTACAO_ID;NUMBER;TB_PRIMEIRA_LOTACAO → K_BRB_HIERARQUIAS;Primeira unidade do colaborador (a mais antiga entre cessões internas e hierarquias, desconsiderando 'ONBRB'). Não varia com DIA.;
+Primeira lotação;PRIMEIRA_LOTACAO_AOD;VARCHAR2;TB_PRIMEIRA_LOTACAO → K_BRB_HIERARQUIAS;Atributo da primeira lotação.;
+Primeira lotação;PRIMEIRA_LOTACAO_APELIDO;VARCHAR2;TB_PRIMEIRA_LOTACAO → K_BRB_HIERARQUIAS;Atributo da primeira lotação.;
+Primeira lotação;PRIMEIRA_LOTACAO_SUP;VARCHAR2;TB_PRIMEIRA_LOTACAO → K_BRB_HIERARQUIAS;Atributo da primeira lotação.;
+Primeira lotação;PRIMEIRA_LOTACAO_DIR;VARCHAR2;TB_PRIMEIRA_LOTACAO → K_BRB_HIERARQUIAS;Atributo da primeira lotação.;
+Primeira lotação;PRIMEIRA_LOTACAO_EMPRESA;VARCHAR2;TB_PRIMEIRA_LOTACAO → K_BRB_HIERARQUIAS;Atributo da primeira lotação.;
+Primeira lotação;PRIMEIRA_LOTACAO_ESTADO;VARCHAR2;TB_PRIMEIRA_LOTACAO → K_BRB_HIERARQUIAS;Atributo da primeira lotação.;
+Primeira lotação;PRIMEIRA_LOTACAO_LOCALIZACAO;VARCHAR2;TB_PRIMEIRA_LOTACAO → K_BRB_HIERARQUIAS;Atributo da primeira lotação.;
+Primeira lotação;PRIMEIRA_LOTACAO_TIPO;VARCHAR2;TB_PRIMEIRA_LOTACAO → K_BRB_HIERARQUIAS;Atributo da primeira lotação. DITEC vira 'TI' no TIPO.;
+Primeira lotação;PRIMEIRA_LOTACAO_SEGMENTACAO;VARCHAR2;TB_PRIMEIRA_LOTACAO → K_BRB_HIERARQUIAS;Atributo da primeira lotação.;
+Cessão externa;CESSAO_ID;NUMBER;K9_DO_FUNCIONARIOCESSOES.ORGAOCESSIONARIO;Órgão cessionário (cedido a outra empresa/órgão) em DIA.;
+Cessão externa;ADICAO_AOD;VARCHAR2;ADM_OUTRASEMPRESAS.NOME;ATENÇÃO: o alias é enganoso, é o NOME do órgão cessionário, não um AOD de adição.;
+Cargo / Função;CARGOFUNCAO_NOME;VARCHAR2;CS_FUNCOES.NOME, senão CARGO;"Nome da função efetiva em DIA; sem função, o cargo.";
+Cargo / Função;CARGOFUNCAO_TEMPO;NUMBER;TB_TEMPO_FUNCAO;Anos (1 casa) somados em funções efetivas já encerradas até DIA. Não inclui a função em aberto.;
+Cargo / Função;CARGOFUNCAO_LIDER;VARCHAR2;CS_FUNCOES;Classificação da função por K9_CODIGO e nome.;Liderança | Gerência | Técnico | Sem função
+Cargo / Função;ATIVIDADE_GRATIFICADA;VARCHAR2;CS_FUNCOES.K9_ATIVIDADEGRATIFICADA;'S' = Atividade, 'N' = Função, nulo = Cargo.;Atividade | Função | Cargo
+Cargo / Função;CARGOFUNCAO_PROGRAMA;VARCHAR2;lista fixa de matrículas;'Liderança Feminina' para matrículas de uma lista no código cuja função começou em 2019 ou depois.;Liderança Feminina | Sem Programa | Sem programa
+Cargo / Função;CARGOFUNCAO_PROMOCAO;VARCHAR2;LAG sobre o VR;Compara o VR com o da função anterior da mesma matrícula. Primeira função, valor igual ou não comparável caem em 'Promoção'.;Promoção | Rebaixamento | Sem promoção
+Cargo / Função;CARGOFUNCAO_CARREIRA;VARCHAR2;K9_CS_TRILHAS.NOME, senão CARREIRA;"Trilha da função; sem função, carreira do cargo.";
+Cargo / Função;CARGOFUNCAO_MOTIVO;VARCHAR2;K9_CS_MOTIVOSALTERACAOFUNCAO;Motivo de inclusão/alteração da função, senão o de encerramento, senão 'Outros'. 'Cargo' quando não há função.;
+Cargo / Função;CARGOFUNCAO_TIPO;VARCHAR2;calculado;Se há função efetiva em DIA.;Função | Cargo
+Cargo / Função;CARGOFUNCAO_VR;NUMBER;CS_FUNCOES.K9_VALORREFERENCIA / VALOR, senão SALARIO;"Valor de referência da função (K9_VALORREFERENCIA se > 0, senão VALOR); sem função, o salário base do cargo. Marcado 'REAVALIAR' no código.";
+Substituição;SUBSTITUICAO_ID;NUMBER;CS_FUNCOES.K9_CODIGO (TIPOFUNCAO = 2);Código da função em que o colaborador substitui em DIA. Havendo várias, vale a de maior VR.;
+Substituição;SUBSTITUICAO_NOME;VARCHAR2;CS_FUNCOES.NOME;Nome da função substituída.;
+Substituição;SUBSTITUICAO_LIDER;VARCHAR2;CS_FUNCOES;Mesma regra de CARGOFUNCAO_LIDER, sem 'Sem função'.;Liderança | Gerência | Técnico
+Substituição;SUBSTITUICAO_CARREIRA;VARCHAR2;K9_CS_TRILHAS.NOME;Trilha da função substituída.;
+Benefício educacional;BENEFICIOS_QTD;NUMBER;TB_BENEFICIO_Q;Quantidade de benefícios educacionais (reembolsos 2,4,5,6,15,22). Zero quando não há. Ver observações sobre a lógica de datas.;
+Benefício educacional;BENEFICIO_ATIVO;VARCHAR2;TB_BENEFICIO_ATUAL;'S' se há benefício vigente em DIA. Na prática só aparece 'S' ou nulo.;S | nulo
+Benefício educacional;BENEFICIO_INSTITUICAO;VARCHAR2;TA_TERCEIROS.NOME;Instituição de ensino.;
+Benefício educacional;BENEFICIO_CURSO;VARCHAR2;TA_FORMACOES.NOME;Curso.;
+Benefício educacional;BENEFICIO_TIPO;VARCHAR2;K9_BS_BENEFICIOEDUCACIONAL.TIPO;"1001 Auxílio Instrução Pós; 1002 Auxílio Instrução Graduação; 1003 Bolsa Estudo; 1004 Crédito Educação; 1006 Auxílio Instrução Mestrado; 1007 Auxílio Instrução Doutorado.";
+Benefício educacional;BENEFICIO_GRAU;VARCHAR2;TA_GRAUSENSINO.NOME;Grau do curso.;
+Benefício educacional;BENEFICIO_AREACONHECIMENTO;VARCHAR2;regras por palavra-chave;Agrupamento do curso por busca de texto no nome e handles de TA_AREASCONHECIMENTO. Ordem das regras importa (a primeira que casa vence).;Inovação e Tendências | Gestão | Economia e Finanças | Ciência de Dados | Comunicação / Marketing | Controladoria / Auditoria | Direito / Jurídico | Ciências Exatas | Tecnologia | Outros
+Benefício educacional;BENEFICIO_INICIO;DATE;BS_REEMBOLSOFUNCIONARIOS.INICIO;Início do reembolso.;
+Benefício educacional;BENEFICIO_FIM;DATE;BS_REEMBOLSOFUNCIONARIOS.FIM;Fim do reembolso.;
+Benefício educacional;BENEFICIO_INICIOCURSO;DATE;K9_BS_BENEFICIOEDUCACIONAL.INICIOCURSO;Início do curso.;
+Benefício educacional;BENEFICIO_TERMINOCURSO;DATE;K9_BS_BENEFICIOEDUCACIONAL.TERMINOCURSO;Término previsto do curso.;
+Férias;GOZO_INICIO;DATE;FP_FUNCIONARIOFERIASGOZADAS (SITUACAO='G');Início das férias em curso em DIA.;
+Férias;GOZO_FIM;DATE;idem;Fim das férias em curso.;
+Férias;GOZO_DIAS;NUMBER;idem;Duração das férias em curso (dias).;
+Férias;PROGRAMADAS_INICIO;DATE;FP_FUNCIONARIOFERIASGOZADAS (SITUACAO='P');Início das próximas férias programadas (a mais próxima futura).;
+Férias;PROGRAMADAS_FIM;DATE;idem;Fim das próximas férias programadas.;
+Férias;PROGRAMADA_DIAS;NUMBER;idem;Duração das férias programadas (dias). Nome no singular, diferente dos demais.;
+Situação / Afastamento;SITUACAO;VARCHAR2;TB_FERIAS_GOZADAS / TB_AFASTAMENTO;"'Férias' se há gozo em DIA; senão o motivo do afastamento vigente; nulo = em atividade normal. Motivos 1 e 2 são separados em com/sem INSS.";Férias | Saúde | Doença INSS | Acidente | Acidente INSS | Maternidade - Prorrogação | Licença mandato de Diretor | demais de FP_MOTIVOSAFASTAMENTOS | nulo
+Outros;REGIUS;VARCHAR2;FP_FUNCIONARIOPAGAMENTO.K_PREVREGIUS;Plano de previdência complementar (Regius).;Não optante | Plano 1 | Plano 3 | Plano CD05
+Outros;FUNCAO_DIA;VARCHAR2;calculado;Posição exercida no dia, por precedência: substituição, função efetiva, cargo.;
+Outros;FUNCAO_TIPO_DIA;VARCHAR2;calculado;Origem de FUNCAO_DIA.;CARGO | FUNCAO | SUBSTITUICAO
+Outros;CAUSA_DEMISSAO;VARCHAR2;FP_CAUSASDEMISSAO.NOME;Causa do desligamento (só preenchida para desligados no mês). Matrículas de uma lista fixa viram 'PDVI'.;PDVI + FP_CAUSASDEMISSAO
