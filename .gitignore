@@ -1,0 +1,10 @@
+# Dados de RH reais não devem ser versionados (LGPD)
+*.xlsx
+*.xlsm
+*.xls
+*.csv
+*.pbix
+*.pbit
+.env
+*.log
+~$*
